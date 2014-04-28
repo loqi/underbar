@@ -8,6 +8,7 @@ var _ = {};
   // seem very useful, but remember it--if a function needs to provide an
   // iterator when the user does not pass one in, this will be handy.
   _.identity = function(val) {
+    return val;
   };
 
   /**
@@ -38,6 +39,7 @@ var _ = {};
   // Like first, but for the last elements. If n is undefined, return just the
   // last element.
   _.last = function(array, n) {
+    return n === undefined ? array[array.length - 1] : array.slice(Math.max(array.length - n, 0));
   };
 
   // Call iterator(value, key, collection) for each element of collection.
@@ -46,37 +48,44 @@ var _ = {};
   // Note: _.each does not have a return value, but rather simply runs the
   // iterator function over each item in the input collection.
   _.each = function(collection, iterator) {
+    if (collection == null) return;
+    if (Array.isArray(collection)) {
+      for (var c = collection.length, i = 0; c--; i++) {
+        iterator(collection[i], i, collection);
+      }
+    } else {
+      for (var k in collection) {
+        iterator(collection[k], k, collection);
+      }
+    }
   };
 
   // Returns the index at which value can be found in the array, or -1 if value
   // is not present in the array.
-  _.indexOf = function(array, target){
-    // TIP: Here's an example of a function that needs to iterate, which we've
-    // implemented for you. Instead of using a standard `for` loop, though,
-    // it uses the iteration helper `each`, which you will need to write.
-    var result = -1;
-
-    _.each(array, function(item, index) {
-      if (item === target && result === -1) {
-        result = index;
-      }
-    });
-
-    return result;
+  _.indexOf = function(array, target){ // Returns on first instance found.
+    for (var c = array.length, i = 0; c--; i++) {
+      if (array[i]===target) return i;
+    }
+    return -1;
   };
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
+    var rval = [];
+    _.each(collection, function(x) { if (test(x)) rval.push(x); }); // FIXME: Handle more parameters?
+    return rval;
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, test) {
-    // TIP: see if you can re-use _.filter() here, without simply
-    // copying code in and modifying it
+    return _.filter( collection, function (x){return !test(x);} ); // FIXME: Handle more parameters.
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
+    var rval = [], seen = {};
+    _.each( array, function(el){if(!seen.hasOwnProperty(el)){seen[el]=1;rval.push(el);}} );
+    return rval;
   };
 
 
