@@ -255,9 +255,15 @@ var _ = {};
   // The arguments for the original function are passed after the wait
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
+//   _.delay = function(func, wait) {
+//     return setTimeout(function(){
+// debugger;
+//       return func.apply(null, Array.prototype.slice.call(arguments, 2)); }, wait);
+//   };
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function(){ return func.apply(null, args); }, wait);
   };
-
 
   /**
    * ADVANCED COLLECTION OPERATIONS
@@ -265,13 +271,15 @@ var _ = {};
    */
 
   // Randomizes the order of an array's contents.
-  //
-  // TIP: This function's test suite will ask that you not modify the original
-  // input array. For a tip on how to make a copy of an array, see:
-  // http://mdn.io/Array.prototype.slice
-  _.shuffle = function(array) {
-  };
-
+  _.shuffle = function(sourceAr){ // "inside-out" Fisher–Yates shuffling copy algorithm. Worst time: O(n)
+    var destAr = [], rndIx;
+    for (var i = 0 ; i < sourceAr.length ;  i++) {
+      rndIx = Math.floor(Math.random() * (i+1));
+      if (rndIx != i) destAr[i] = destAr[rndIx];
+      destAr[rndIx] = sourceAr[i];
+    }
+  return destAr;
+  }
 
   /**
    * Note: This is the end of the pre-course curriculum. Feel free to continue,
