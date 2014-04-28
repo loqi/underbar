@@ -39,7 +39,9 @@ var _ = {};
   // Like first, but for the last elements. If n is undefined, return just the
   // last element.
   _.last = function(array, n) {
-    return n === undefined ? array[array.length - 1] : array.slice(Math.max(array.length - n, 0));
+    return n === undefined ?
+      array[array.length - 1] :
+      array.slice(Math.max(array.length - n, 0));
   };
 
   // Call iterator(value, key, collection) for each element of collection.
@@ -72,7 +74,8 @@ var _ = {};
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
     var rval = [];
-    _.each( collection , function(item){if(test(item)) rval.push(item);} ); // FIXME: Handle more parameters?
+    _.each( collection ,
+      function(item){if(test(item)) rval.push(item);} ); // FIXME: Handle more parameters?
     return rval;
   };
 
@@ -84,7 +87,9 @@ var _ = {};
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
     var rval = [], seen = {};
-    _.each( array , function(item){if(!seen.hasOwnProperty(item)){seen[item]=1;rval.push(item);}} );
+    _.each(array, function(item){
+      if (!seen.hasOwnProperty(item)) { seen[item] = 1; rval.push(item); }
+    });
     return rval;
   };
 
@@ -134,22 +139,18 @@ var _ = {};
         iterator(accumulator, item, index, collection) :
         isInitialized=true, item;
     });
-    // if (!isInitialized) throw new TypeError("Reduce was passed an empty collection and no accumulator.");
+    // if (!isInitialized) throw new TypeError("reduce() received an empty collection and no accumulator.");
     return isInitialized ? accumulator : null;
   };
 
   // Determine if the array or object contains a given value (using `===`).
   _.contains = function(collection, target) {
-    // TIP: Many iteration problems can be most easily expressed in
-    // terms of reduce(). Here's a freebie to demonstrate!
     return _.reduce(collection, function(wasFound, item) {
-      if (wasFound) {
-        return true;
-      }
-      return item === target;
+      return wasFound || item === target;
     }, false);
-  }; // FIXME: Should return short on the first positive test.
+  };
 
+// FIXME: All these should return short on the first positive test.
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
@@ -163,7 +164,9 @@ var _ = {};
   // provided, provide a default one
   _.some = function(collection, iterator) {
     if (typeof iterator === 'undefined') iterator = _.identity;
-    return !_.every( collection , function(item){return !iterator(item);} );
+    return !_.every( collection , function(item){
+      return !iterator(item);
+    });
   };
 
   /**
@@ -173,7 +176,21 @@ var _ = {};
    * In this section, we'll look at a couple of helpers for merging objects.
    */
 
-  // Extend a given object with all the properties of the passed in
+
+  // Utility function serving _.extend and _.defaults.
+  function mergeObjs(mayOverwrite, firstObj, moreObjs) {
+    _.each(moreObjs, function(anotherObj) {
+      if (anotherObj) {
+        for (var prop in anotherObj) {
+          if (mayOverwrite || !firstObj.hasOwnProperty(prop)) {
+            firstObj[prop] = anotherObj[prop];
+          }
+        }
+      }
+    });
+    return firstObj;
+  }
+  // Extend a given object with all the properties of the passed-in
   // object(s).
   //
   // Example:
@@ -184,12 +201,14 @@ var _ = {};
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
-  _.extend = function(obj) {
+  _.extend = function(firstObj) {
+    return mergeObjs(true, firstObj, Array.prototype.slice.call(arguments, 1));
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
-  _.defaults = function(obj) {
+  _.defaults = function(firstObj) {
+    return mergeObjs(false, firstObj, Array.prototype.slice.call(arguments, 1));
   };
 
 
@@ -204,22 +223,13 @@ var _ = {};
   // Return a function that can be called at most one time. Subsequent calls
   // should return the previously returned value.
   _.once = function(func) {
-    // TIP: These variables are stored in a "closure scope" (worth researching),
-    // so that they'll remain available to the newly-generated function every
-    // time it's called.
     var alreadyCalled = false;
     var result;
-
-    // TIP: We'll return a new function that delegates to the old one, but only
-    // if it hasn't been called before.
     return function() {
       if (!alreadyCalled) {
-        // TIP: .apply(this, arguments) is the standard way to pass on all of the
-        // infromation from one function call to another.
         result = func.apply(this, arguments);
         alreadyCalled = true;
       }
-      // The new function always returns the originally computed result.
       return result;
     };
   };
@@ -229,8 +239,14 @@ var _ = {};
   //
   // _.memoize should return a function that when called, will check if it has
   // already computed the result for the given argument and return that value
-  // instead if possible.
+  // instead, if possible.
   _.memoize = function(func) {
+    var memoTab = {};
+    return function(param) {
+      var key = (typeof param) + '~' + param;
+      if (memoTab.hasOwnProperty(key)) return memoTab[key];
+      return (memoTab[key] = func(param));
+    };
   };
 
   // Delays a function for the given number of milliseconds, and then calls

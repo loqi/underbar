@@ -331,7 +331,6 @@ describe('extend', function() {
     var to = {};
     var from = {a:'b'};
     var extended = _.extend(to, from);
-
     expect(extended.a).to.equal('b');
   });
 
