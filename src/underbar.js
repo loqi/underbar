@@ -72,51 +72,45 @@ var _ = {};
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
     var rval = [];
-    _.each(collection, function(x) { if (test(x)) rval.push(x); }); // FIXME: Handle more parameters?
+    _.each( collection , function(item){if(test(item)) rval.push(item);} ); // FIXME: Handle more parameters?
     return rval;
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, test) {
-    return _.filter( collection, function (x){return !test(x);} ); // FIXME: Handle more parameters.
+    return _.filter( collection, function (item){return !test(item);} ); // FIXME: Handle more parameters.
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
     var rval = [], seen = {};
-    _.each( array, function(el){if(!seen.hasOwnProperty(el)){seen[el]=1;rval.push(el);}} );
+    _.each( array , function(item){if(!seen.hasOwnProperty(item)){seen[item]=1;rval.push(item);}} );
     return rval;
   };
 
-
   // Return the results of applying an iterator to each element.
   _.map = function(collection, iterator) {
-    // map() is a useful primitive iteration function that works a lot
-    // like each(), but in addition to running the operation on all
-    // the members, it also maintains an array of results.
+    var rval = [];
+    _.each( collection , function(item){rval.push(iterator(item));} );
+    return rval;
   };
-
-  /*
-   * TIP: map is really handy when you want to transform an array of
-   * values into a new array of values. _.pluck() is solved for you
-   * as an example of this.
-   */
 
   // Takes an array of objects and returns and array of the values of
   // a certain property in it. E.g. take an array of people and return
   // an array of just their ages
   _.pluck = function(collection, key) {
-    // TIP: map is really handy when you want to transform an array of
-    // values into a new array of values. _.pluck() is solved for you
-    // as an example of this.
-    return _.map(collection, function(item){
-      return item[key];
-    });
+    return _.map( collection , function(item){return item[key];} );
   };
 
   // Calls the method named by methodName on each value in the list.
   // Note: you will nead to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
+    return _.map( collection , function(item){
+      return ((typeof functionOrKey === 'function') ?
+        functionOrKey.apply(item, args) :
+        item[functionOrKey](args)
+      );
+    });
   };
 
   // Reduces an array or object to a single value by repetitively calling
@@ -133,6 +127,15 @@ var _ = {};
   //     return total + number;
   //   }, 0); // should be 6
   _.reduce = function(collection, iterator, accumulator) {
+    var isInitialized = arguments.length > 2;
+    if (collection == null) collection = [];
+    _.each(collection, function(item, index, collection){
+      accumulator = isInitialized ?
+        iterator(accumulator, item, index, collection) :
+        isInitialized=true, item;
+    });
+    // if (!isInitialized) throw new TypeError("Reduce was passed an empty collection and no accumulator.");
+    return isInitialized ? accumulator : null;
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -145,20 +148,23 @@ var _ = {};
       }
       return item === target;
     }, false);
-  };
+  }; // FIXME: Should return short on the first positive test.
 
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
-    // TIP: Try re-using reduce() here.
+    if (typeof iterator === 'undefined') iterator = _.identity;
+    return _.reduce(collection, function(everySoFar, item){
+      return everySoFar && !!iterator(item);
+    }, true);
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
-    // TIP: There's a very clever way to re-use every() here.
+    if (typeof iterator === 'undefined') iterator = _.identity;
+    return !_.every( collection , function(item){return !iterator(item);} );
   };
-
 
   /**
    * OBJECTS

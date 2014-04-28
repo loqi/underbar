@@ -261,7 +261,7 @@ describe('every', function() {
     expect(_.every([0], _.identity)).to.equal(false);
   });
 
-  it('treats each item as as a callback result when no callback is provided', function() {
+  it('treats each item as a callback result when no callback is provided', function() {
     expect(_.every([true, true, true])).to.equal(true);
   });
 
