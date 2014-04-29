@@ -96,7 +96,7 @@ var _ = {};
   // Return the results of applying an iterator to each element.
   _.map = function(collection, iterator) {
     var rval = [];
-    _.each( collection , function(item){rval.push(iterator(item));} );
+    _.each( collection , function(item, ix, collecn){rval.push(iterator(item, ix, collecn));} );
     return rval;
   };
 
@@ -104,7 +104,7 @@ var _ = {};
   // a certain property in it. E.g. take an array of people and return
   // an array of just their ages
   _.pluck = function(collection, key) {
-    return _.map( collection , function(item){return item[key];} );
+    return _.map( collection , function(item, ix, collecn){ return item[key];} );
   };
 
   // Calls the method named by methodName on each value in the list.
@@ -286,12 +286,39 @@ var _ = {};
    * but nothing beyond here is required.
    */
 
+  // // Sorts an array without transposing equal-scoring elements.
+  // _.stableSort = function(arA, compareFn){ // Bottom-up merge sort. Worst time O(n lg n), Mem O(2n).
+  //   var len = arA.length, arB = new Array(len);
+  //   var iLef, iRig, iEnd, hHef, hRig, runWid, i, j, tmp;
+  //   for (runWid = 1; runWid < len; runWid *= 2) { // width of currently solted runs
+  //     for (i = 0; i < len; i = i + 2*runWid) {     // i indexes a consecutive pair of sorted runs
+  //       iLef = hLef = i;
+  //       iRig = hRig = Math.min(len, i+runWid);
+  //       iEnd = Math.min(len, i+2*runWid);
+  //       for (j = iLef; j < iEnd; j++) {
+  //         arB[j] = hLef < iRig && (hRig >= iEnd || compareFn(lefOb, rigOb) <= 0 ) ?
+  //           arA[hLef++] : arA[hRig++]; } }
+  //     tmp=arA;  arA=arB;  arB=tmp; }
+  // return arB; };
 
+  // An internal function to generate lookup iterators.
+  var lookupIterator = function(val) {
+    return ('function' === typeof val) ? val : function(obj){ return obj[val]; };
+  };
   // Sort the object's values by a criterion produced by an iterator.
-  // If iterator is a string, sort objects by that property with the name
-  // of that string. For example, _.sortBy(people, 'name') should sort
-  // an array of people by their name.
-  _.sortBy = function(collection, iterator) {
+  _.sortBy = function(collection, funcOrProp) {
+    var iterator = lookupIterator(funcOrProp); // The iterator function is used to assign sorting rank.
+    var objAr = _.map(collection, function(val, ix, collecn) {
+      return { value:val , index:ix , rank:iterator.call(collection, val, ix, collecn) };
+    });
+    objAr = objAr.sort(function(leftObj, rightObj) {
+      var a = leftObj.rank, b = rightObj.rank; // The extra code ensures a "stable sort"
+      if (a === b) { return (leftObj.index < rightObj.index) ? -1 : 1; } // put equal ranks together, but not transposed.
+      if (a === void 0) return 1;   // undefined values are sorted to the bottom.
+      if (b === void 0) return -1;
+      return a < b ? -1 : 1;
+    });
+    return _.pluck(objAr, 'value');
   };
 
   // Zip together two or more arrays with elements of the same index
