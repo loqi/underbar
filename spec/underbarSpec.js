@@ -650,8 +650,10 @@ describe("throttle", function() {
     };
     var throttledIncr = _.throttle(incr, 64);
     var results = [];
+    var times = [];
     var saveResult = function() {
       results.push(throttledIncr());
+      times.push(new Date);
     };
     saveResult();
     saveResult();
@@ -660,6 +662,8 @@ describe("throttle", function() {
     setTimeout(saveResult, 96);
     setTimeout(saveResult, 144);
     setTimeout(function() {
+console.log("results "+results.toString());
+console.log("times "+times.toString());
       expect(results[0]).to.eql(1);
       expect(results[1]).to.eql(1);
       expect(results[2]).to.eql(1);

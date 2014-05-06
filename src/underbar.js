@@ -1,5 +1,14 @@
 /*jshint eqnull:true, expr:true*/
 
+
+
+
+
+// For my confusion, see _.flatten down below.
+
+
+
+
 var _ = {};
 
 (function() {
@@ -100,11 +109,11 @@ var _ = {};
     return rval;
   };
 
-  // Takes an array of objects and returns and array of the values of
+  // Takes an array of objects and returns an array of the values of
   // a certain property in it. E.g. take an array of people and return
   // an array of just their ages
   _.pluck = function(collection, key) {
-    return _.map( collection , function(item, ix, collecn){ return item[key];} );
+    return _.map( collection , function(item){ return item[key];} );
   };
 
   // Calls the method named by methodName on each value in the list.
@@ -227,7 +236,7 @@ var _ = {};
     var result;
     return function() {
       if (!alreadyCalled) {
-        result = func.apply(this, arguments);
+        result = func.apply(this, arguments); // this === window
         alreadyCalled = true;
       }
       return result;
@@ -286,7 +295,8 @@ var _ = {};
    * but nothing beyond here is required.
    */
 
-  // // Sorts an array without transposing equal-scoring elements.
+  // This is probably the wrong approach.
+  // // Sorts an array without transposing equal-ranking elements.
   // _.stableSort = function(arA, compareFn){ // Bottom-up merge sort. Worst time O(n lg n), Mem O(2n).
   //   var len = arA.length, arB = new Array(len);
   //   var iLef, iRig, iEnd, hHef, hRig, runWid, i, j, tmp;
@@ -310,9 +320,8 @@ var _ = {};
     var iterator = lookupIterator(funcOrProp); // The iterator function is used to assign sorting rank.
     var objAr = _.map(collection, function(val, ix, collecn) {
       return { value:val , index:ix , rank:iterator.call(collection, val, ix, collecn) };
-    });
-    objAr = objAr.sort(function(leftObj, rightObj) {
-      var a = leftObj.rank, b = rightObj.rank; // The extra code ensures a "stable sort"
+    }).sort(function(leftObj, rightObj) {
+      var a = leftObj.rank, b = rightObj.rank; // The extra code ensures a stable sort
       if (a === b) { return (leftObj.index < rightObj.index) ? -1 : 1; } // put equal ranks together, but not transposed.
       if (a === void 0) return 1;   // undefined values are sorted to the bottom.
       if (b === void 0) return -1;
@@ -321,42 +330,136 @@ var _ = {};
     return _.pluck(objAr, 'value');
   };
 
-  // Zip together two or more arrays with elements of the same index
-  // going together.
-  //
-  // Example:
+  // Zip together two or more arrays with elements of the same index going together.
   // _.zip(['a','b','c','d'], [1,2,3]) returns [['a',1], ['b',2], ['c',3], ['d',undefined]]
   _.zip = function() {
+    var args = Array.prototype.slice.call(arguments);
+    var zWidth = args.length;
+    var zHeight = Math.max.apply(null, _.pluck(args, 'length'));
+    var zipAr = new Array(zHeight);
+    for (var zRow = 0; zRow < zHeight; zRow++) {
+      zipAr[zRow] = new Array(zWidth);
+      for (var zCol = 0; zCol < zWidth; zCol++) {
+        zipAr[zRow][zCol] = args[zCol][zRow];  // Any cell may be undefined
+      }
+    }
+    return zipAr;
   };
 
-  // Takes a multidimensional array and converts it to a one-dimensional array.
-  // The new array should contain all elements of the multidimensional array.
-  //
-  // Hint: Use Array.isArray to check if something is an array
-  _.flatten = function(nestedArray, result) {
+  // Iterates through `nestedAr`, concatenating each element to the end of `buildAr`.
+  // If any element in `nestedAr` is itself an array, it is recursively flattened, and
+  // the individual elements are serially concatenated in place of that inner array.
+  // _.flatten( [[[a,b],c,[d]],[[],e]]             )    => [        a,b,c,d,e]
+  // _.flatten( [[[a,b],c,[d]],[[],e]] , [x,[y,z]] )    => [x,[y,z],a,b,c,d,e]
+  _.flatten = function(nestedAr, buildAr) {
+    // buildAr = buildAr || []; // FIXME: This is how I want to be doing it, but when buildAr is undefined, this line has no effect.
+    var catAr = buildAr || []; // FIXME: Must use two separate references to the array. I don't understand why.
+    _.each(nestedAr, function(element) {
+      if (Array.isArray(element))
+        _.flatten(element, catAr); // FIXME: Using buildAr here causes buildAr to become immutable as described above.
+      else catAr.push(element);
+    });
+    return catAr;
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
+  _.intersection = function(firstAr) {
+    var args = Array.prototype.slice.call(arguments);
+    _.uniq(firstAr)
+    
+    _.indexOf(otherAr, cell) >= 0
+    
+  };
+
+  // Produce an array that contains every item shared between all the
+  // passed-in arrays.
   _.intersection = function() {
+    if (arguments.length < 1) return [];
+    var arrays = Array.prototype.slice.call(arguments);
+    var firstSet = _.uniq(arrays.shift());
+    if (arrays.length < 1) return firstSet;
+    return _.filter(firstSet, function(element) {
+      return _.every(arrays, function(array) { return _.contains(array, element); });
+    });
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
-  _.difference = function(array) {
+  _.difference = function() {
+    if (arguments.length < 1) return [];
+    var arrays = Array.prototype.slice.call(arguments);
+    var firstAr = arrays.shift();
+    if (arrays.length < 1) return firstAr;
+    return _.filter(firstAr, function(element){
+      return _.every(arrays, function(array) { return !_.contains(array, element); });
+    });
   };
-
 
   /**
    * MEGA EXTRA CREDIT
    * =================
    */
 
+   // Delay in miliseconds, accurate to +- 1 ms. Uses system time to determine when to stop.
+   // Probably a very lame way to do this.
+_.sleep = function(mSec){
+   var now = 0, endAt = Number(new Date) + mSec;
+     while (now < endAt) now = Number(new Date);
+   }
+
   // Returns a function, that, when invoked, will only be triggered at most once
   // during a given window of time.
-  //
   // See the Underbar readme for details.
-  _.throttle = function(func, wait) {
+  _.throttle = function(task, timeGap) {
+    var argQueue = [];
+    var saveResult
+    var timerId;
+    var waitTill = Number(new Date);
+    return function(){
+      var now = Number(new Date);
+      if (now >= waitTill) {
+        waitTill += timeGap
+        return ( saveResult = task.apply(window, arguments) );
+      }
+      argQueue.push(arguments);
+      timerId = window.setTimeout(function(){
+        if (argQueue.length > 0) saveResult = task.apply(window, argQueue.shift());
+        window.clearTimeout(timerId);
+        timerId = null;
+      }, waitTill - now);
+      return saveResult;
+    };
   };
+  _.uglyThrottle = function(func, duration) {
+    var timerId;
+    var saveResult;
+    var prevNow = 0;
+    return function() {
+      var now = Number(new Date);
+      var remaining = prevNow + duration - now;
+      if (remaining <= 0) {
+        window.clearTimeout(timerId);
+        timerId = null;
+        prevNow = now;
+        saveResult = func.apply(this, arguments);
+      } else if (!timerId) {
+        timerId = this.setTimeout(function() {
+          prevNow = Number(new Date);
+          timerId = null;
+          saveResult = func.apply(this, arguments);
+        }, remaining);
+      }
+      return saveResult;
+    };
+  };
+  // _.brokenThrottle = function(func, duration) {
+  //   var saveResult;
+  //   var runCount = 0;
+  //   var releaserId = window.setTimeout(function() { window.clearTimeout(releaserId); }, duration);
+  //   return function() {
+  //     return ( saveResult = runCount++ ? saveResult : func.apply(window, arguments) );
+  //   };
+  // };
 
 }).call(this);
