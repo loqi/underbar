@@ -654,16 +654,14 @@ describe("throttle", function() {
     var saveResult = function() {
       results.push(throttledIncr());
       times.push(new Date);
-    };
-    saveResult();
-    saveResult();
-    setTimeout(saveResult, 32);
-    setTimeout(saveResult, 80);
-    setTimeout(saveResult, 96);
-    setTimeout(saveResult, 144);
+    };                                //  elapsed    result   backlog
+    saveResult();                     //     0 ms      1
+    saveResult();                     //     0 ms      1      64
+    setTimeout(saveResult, 32);       //    32 ms      1      64, 128
+    setTimeout(saveResult, 80);       //    80 ms      2      128, 192
+    setTimeout(saveResult, 96);       //    96 ms      2      128, 192, 256
+    setTimeout(saveResult, 144);      //   144 ms      3      192, 256
     setTimeout(function() {
-console.log("results "+results.toString());
-console.log("times "+times.toString());
       expect(results[0]).to.eql(1);
       expect(results[1]).to.eql(1);
       expect(results[2]).to.eql(1);
@@ -672,5 +670,5 @@ console.log("times "+times.toString());
       expect(results[5]).to.eql(3);
       done();
     }, 192);
-  })
+  });
 });

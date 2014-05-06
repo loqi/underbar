@@ -401,44 +401,14 @@ var _ = {};
    * =================
    */
 
-   // Delay in miliseconds, accurate to +- 1 ms. Uses system time to determine when to stop.
-   // Probably a very lame way to do this.
-_.sleep = function(mSec){
-   var now = 0, endAt = Number(new Date) + mSec;
-     while (now < endAt) now = Number(new Date);
-   }
-
-  // Returns a function, that, when invoked, will only be triggered at most once
-  // during a given window of time.
-  // See the Underbar readme for details.
-  _.throttle = function(task, timeGap) {
-    var argQueue = [];
-    var saveResult
-    var timerId;
-    var waitTill = Number(new Date);
-    return function(){
-      var now = Number(new Date);
-      if (now >= waitTill) {
-        waitTill += timeGap
-        return ( saveResult = task.apply(window, arguments) );
-      }
-      argQueue.push(arguments);
-      timerId = window.setTimeout(function(){
-        if (argQueue.length > 0) saveResult = task.apply(window, argQueue.shift());
-        window.clearTimeout(timerId);
-        timerId = null;
-      }, waitTill - now);
-      return saveResult;
-    };
-  };
-  _.uglyThrottle = function(func, duration) {
-    var timerId;
+  _.throttle = function(func, interval) {
     var saveResult;
+    var timerId;
     var prevNow = 0;
     return function() {
       var now = Number(new Date);
-      var remaining = prevNow + duration - now;
-      if (remaining <= 0) {
+      var deferment = prevNow + interval - now;
+      if (deferment <= 0) {
         window.clearTimeout(timerId);
         timerId = null;
         prevNow = now;
@@ -448,18 +418,10 @@ _.sleep = function(mSec){
           prevNow = Number(new Date);
           timerId = null;
           saveResult = func.apply(this, arguments);
-        }, remaining);
+        }, deferment);
       }
       return saveResult;
     };
   };
-  // _.brokenThrottle = function(func, duration) {
-  //   var saveResult;
-  //   var runCount = 0;
-  //   var releaserId = window.setTimeout(function() { window.clearTimeout(releaserId); }, duration);
-  //   return function() {
-  //     return ( saveResult = runCount++ ? saveResult : func.apply(window, arguments) );
-  //   };
-  // };
 
 }).call(this);
