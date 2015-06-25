@@ -284,7 +284,7 @@ var _ = {};
     var destAr = [], rndIx;
     for (var i = 0 ; i < sourceAr.length ;  i++) {
       rndIx = Math.floor(Math.random() * (i+1));
-      if (rndIx != i) destAr[i] = destAr[rndIx];
+      destAr[i] = destAr[rndIx];
       destAr[rndIx] = sourceAr[i];
     }
   return destAr;
